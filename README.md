@@ -158,6 +158,6 @@ Read [Architecture](docs/ARCHITECTURE.md), [Privacy](docs/PRIVACY.md), [Contribu
 
 ## Origins and license
 
-Raven was extracted from a personal Windows setup into a reusable template. [avenoxbeyin](https://github.com/avenoxai/avenoxbeyin) informed discussion of folder-based continuity and compilation. This repository contains neither that project's Git history nor its users' data, and is not affiliated with it.
+Raven was extracted from a personal Windows setup into a reusable template.
 
 Released under the [MIT license](LICENSE), including the user-supplied icons. Not affiliated with OpenAI, Anthropic, Obsidian, Mem0, or Todoist.
