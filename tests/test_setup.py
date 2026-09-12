@@ -13,7 +13,7 @@ import release_check
 class SetupTests(unittest.TestCase):
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory(prefix='raven-install-test-');self.addCleanup(self.tmp.cleanup)
-        self.target=Path(self.tmp.name)/'new vault'
+        self.target=(Path(self.tmp.name)/'new vault').resolve()
         p=patch.object(setup,'find_cli',return_value='');p.start();self.addCleanup(p.stop)
 
     def test_safe_default_install(self):

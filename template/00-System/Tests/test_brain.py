@@ -6,7 +6,7 @@ import brain,gateway,lifecycle
 class BrainTests(unittest.TestCase):
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory(); self.old=(brain.ROOT,brain.CONFIG,brain.STATE)
-        brain.ROOT=Path(self.temp.name); brain.CONFIG=brain.ROOT/'00-System/Config'; brain.STATE=brain.ROOT/'00-System/State'; brain.CONFIG.mkdir(parents=True)
+        brain.ROOT=Path(self.temp.name).resolve(); brain.CONFIG=brain.ROOT/'00-System/Config'; brain.STATE=brain.ROOT/'00-System/State'; brain.CONFIG.mkdir(parents=True)
         for filename in ('settings.json','folder-policies.json'): shutil.copy(self.old[1]/filename,brain.CONFIG/filename)
         (brain.ROOT/'85-Companion').mkdir()
         for name in ('Core','Rules','Last-Session','Threads','Journal'):

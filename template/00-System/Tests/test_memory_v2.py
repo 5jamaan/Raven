@@ -7,7 +7,7 @@ import brain, memory_engine as m, memory_worker as w, raven_hook as hook
 class MemoryTests(unittest.TestCase):
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory(prefix='raven-v2-test-'); self.addCleanup(self.tmp.cleanup)
-        root=Path(self.tmp.name)/'vault'; root.mkdir(); self.root=root
+        root=Path(self.tmp.name)/'vault'; root.mkdir(); root=root.resolve(); self.root=root
         original=brain.ROOT
         (root/'00-System/Config').mkdir(parents=True)
         for name in ('settings.json','folder-policies.json','memory.json'):
