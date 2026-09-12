@@ -1,0 +1,22 @@
+---
+type: "decision"
+privacy: "private"
+ai_access: "allowed_when_relevant"
+memory_eligible: false
+source: ""
+created: "{{date:YYYY-MM-DD}}"
+updated: "{{date:YYYY-MM-DD}}"
+status: "pending"
+owner: ""
+review_date: ""
+---
+
+# {{title}}
+
+## Sorun
+
+## Seçenekler
+
+## Gerekçe
+
+## Sonuç

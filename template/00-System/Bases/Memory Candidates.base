@@ -1,0 +1,39 @@
+{
+  "filters": {
+    "and": [
+      "!file.inFolder(\"00-System\")",
+      "type == \"memory-candidate\"",
+      "status != \"rejected\""
+    ]
+  },
+  "properties": {
+    "file.name": {
+      "displayName": "Kayıt"
+    },
+    "note.next_action": {
+      "displayName": "Sonraki adım"
+    },
+    "note.review_date": {
+      "displayName": "Gözden geçirme"
+    },
+    "note.status": {
+      "displayName": "Durum"
+    },
+    "note.due": {
+      "displayName": "Tarih"
+    }
+  },
+  "views": [
+    {
+      "type": "table",
+      "name": "Hafıza adayları",
+      "order": [
+        "file.name",
+        "privacy",
+        "memory_eligible",
+        "confidence",
+        "status"
+      ]
+    }
+  ]
+}

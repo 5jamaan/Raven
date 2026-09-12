@@ -1,0 +1,29 @@
+{
+  "vault_name": "RavenOS",
+  "companion": "Raven",
+  "user": "User",
+  "timezone": "Europe/Berlin",
+  "daily_time": "19:00",
+  "weekly_day": "Sunday",
+  "weekly_time": "18:00",
+  "private_ai_access": "allowed_when_relevant",
+  "sync": "local",
+  "stale_days": 14,
+  "mem0": {
+    "enabled": false,
+    "user_id": "",
+    "policy_approval": "",
+    "max_atoms_per_run": 10
+  },
+  "todoist": {
+    "enabled": false,
+    "mode": "one-way",
+    "iphone_verified": false,
+    "project_id": "",
+    "sections": {},
+    "reminders": "automatic-free-user-settings",
+    "custom_reminder_status": "not-tested"
+  },
+  "sensitive_terms": [],
+  "python": ""
+}

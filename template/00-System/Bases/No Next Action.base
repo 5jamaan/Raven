@@ -1,0 +1,20 @@
+{
+  "filters": {
+    "and": [
+      "!file.inFolder(\"00-System\")",
+      "type == \"project\"",
+      "status == \"active\"",
+      "!next_action"
+    ]
+  },
+  "views": [
+    {
+      "type": "table",
+      "name": "Sonraki adımı eksik",
+      "order": [
+        "file.name",
+        "review_date"
+      ]
+    }
+  ]
+}

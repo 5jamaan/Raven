@@ -1,0 +1,67 @@
+{
+  "00-System": {
+    "privacy": "private",
+    "ai_access": "allowed_when_relevant",
+    "memory_eligible": false
+  },
+  "01-Inbox": {
+    "privacy": "private",
+    "ai_access": "allowed_when_relevant",
+    "memory_eligible": false
+  },
+  "10-Self": {
+    "privacy": "private",
+    "ai_access": "allowed_when_relevant",
+    "memory_eligible": false
+  },
+  "20-Goals": {
+    "privacy": "private",
+    "ai_access": "allowed_when_relevant",
+    "memory_eligible": false
+  },
+  "30-Projects": {
+    "privacy": "private",
+    "ai_access": "allowed_when_relevant",
+    "memory_eligible": false
+  },
+  "40-Professional-Growth": {
+    "privacy": "private",
+    "ai_access": "allowed_when_relevant",
+    "memory_eligible": false
+  },
+  "50-Intellectual-Curiosity": {
+    "privacy": "private",
+    "ai_access": "allowed_when_relevant",
+    "memory_eligible": false
+  },
+  "60-Knowledge": {
+    "privacy": "private",
+    "ai_access": "allowed_when_relevant",
+    "memory_eligible": false
+  },
+  "70-Decisions": {
+    "privacy": "private",
+    "ai_access": "allowed_when_relevant",
+    "memory_eligible": false
+  },
+  "80-Reviews": {
+    "privacy": "private",
+    "ai_access": "allowed_when_relevant",
+    "memory_eligible": false
+  },
+  "85-Companion": {
+    "privacy": "private",
+    "ai_access": "allowed_when_relevant",
+    "memory_eligible": false
+  },
+  "90-Archive": {
+    "privacy": "private",
+    "ai_access": "allowed_when_relevant",
+    "memory_eligible": false
+  },
+  "Attachments": {
+    "privacy": "private",
+    "ai_access": "allowed_when_relevant",
+    "memory_eligible": false
+  }
+}

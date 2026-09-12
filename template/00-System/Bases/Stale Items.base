@@ -1,0 +1,39 @@
+{
+  "filters": {
+    "and": [
+      "!file.inFolder(\"00-System\")",
+      "status != \"done\"",
+      "status != \"completed\"",
+      "updated && date(updated) < today() - \"14d\"",
+      "type == \"project\" || type == \"task\" || type == \"growth\" || type == \"thread\""
+    ]
+  },
+  "properties": {
+    "file.name": {
+      "displayName": "Kayıt"
+    },
+    "note.next_action": {
+      "displayName": "Sonraki adım"
+    },
+    "note.review_date": {
+      "displayName": "Gözden geçirme"
+    },
+    "note.status": {
+      "displayName": "Durum"
+    },
+    "note.due": {
+      "displayName": "Tarih"
+    }
+  },
+  "views": [
+    {
+      "type": "table",
+      "name": "Unutulma riski",
+      "order": [
+        "file.name",
+        "updated",
+        "next_action"
+      ]
+    }
+  ]
+}

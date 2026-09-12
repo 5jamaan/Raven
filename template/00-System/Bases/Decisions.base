@@ -1,0 +1,37 @@
+{
+  "filters": {
+    "and": [
+      "!file.inFolder(\"00-System\")",
+      "type == \"decision\"",
+      "status != \"decided\""
+    ]
+  },
+  "properties": {
+    "file.name": {
+      "displayName": "Kayıt"
+    },
+    "note.next_action": {
+      "displayName": "Sonraki adım"
+    },
+    "note.review_date": {
+      "displayName": "Gözden geçirme"
+    },
+    "note.status": {
+      "displayName": "Durum"
+    },
+    "note.due": {
+      "displayName": "Tarih"
+    }
+  },
+  "views": [
+    {
+      "type": "table",
+      "name": "Bekleyen kararlar",
+      "order": [
+        "file.name",
+        "owner",
+        "review_date"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "nodes": [
+    {
+      "id": "dashboard",
+      "type": "file",
+      "file": "Dashboard.md",
+      "x": 0,
+      "y": 0,
+      "width": 400,
+      "height": 350
+    }
+  ],
+  "edges": []
+}

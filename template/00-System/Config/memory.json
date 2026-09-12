@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "enabled": false,
+  "runner": "codex",
+  "model": "",
+  "codex_path": "",
+  "claude_path": "",
+  "max_calls_per_day": 8,
+  "max_input_chars_per_day": 96000,
+  "max_batch_chars": 16000,
+  "max_batch_turns": 6,
+  "max_attempts": 2,
+  "quiet_seconds": 120,
+  "retention_days": 3,
+  "max_queue_bytes": 52428800,
+  "cloud_processing": false,
+  "excluded_sessions": [],
+  "excluded_projects": []
+}

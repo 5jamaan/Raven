@@ -1,0 +1,37 @@
+{
+  "filters": {
+    "and": [
+      "!file.inFolder(\"00-System\")",
+      "file.inFolder(\"50-Intellectual-Curiosity\")",
+      "status == \"queued\""
+    ]
+  },
+  "properties": {
+    "file.name": {
+      "displayName": "Kayıt"
+    },
+    "note.next_action": {
+      "displayName": "Sonraki adım"
+    },
+    "note.review_date": {
+      "displayName": "Gözden geçirme"
+    },
+    "note.status": {
+      "displayName": "Durum"
+    },
+    "note.due": {
+      "displayName": "Tarih"
+    }
+  },
+  "views": [
+    {
+      "type": "table",
+      "name": "Merak ve okuma kuyruğu",
+      "order": [
+        "file.name",
+        "type",
+        "updated"
+      ]
+    }
+  ]
+}

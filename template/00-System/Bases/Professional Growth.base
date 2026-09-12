@@ -1,0 +1,37 @@
+{
+  "filters": {
+    "and": [
+      "!file.inFolder(\"00-System\")",
+      "file.inFolder(\"40-Professional-Growth\")",
+      "type != \"map\""
+    ]
+  },
+  "properties": {
+    "file.name": {
+      "displayName": "Kayıt"
+    },
+    "note.next_action": {
+      "displayName": "Sonraki adım"
+    },
+    "note.review_date": {
+      "displayName": "Gözden geçirme"
+    },
+    "note.status": {
+      "displayName": "Durum"
+    },
+    "note.due": {
+      "displayName": "Tarih"
+    }
+  },
+  "views": [
+    {
+      "type": "table",
+      "name": "Profesyonel gelişim",
+      "order": [
+        "file.name",
+        "next_action",
+        "review_date"
+      ]
+    }
+  ]
+}
