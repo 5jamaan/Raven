@@ -1,4 +1,6 @@
 """Codex/Claude Code adapters. Never request an agent continuation."""
+from i18n import t
+from i18n import conversation_instruction
 import json, os, sys
 from pathlib import Path
 import memory_engine as mem
@@ -38,7 +40,7 @@ def handle(event,provider='codex'):
     if provider not in ('codex','claude') or not event.get('session_id'): return {}
     kind=event.get('hook_event_name'); sid=mem.key(provider,event['session_id'])
     if kind=='SessionStart':
-        context=mem.context(provider,event['session_id'])
+        context=conversation_instruction()+mem.context(provider,event['session_id'])
         return {'hookSpecificOutput':{'hookEventName':kind,'additionalContext':context}} if context else {}
     if kind=='UserPromptSubmit':
         prompt=event.get('prompt','')
@@ -50,11 +52,11 @@ def handle(event,provider='codex'):
                 with mem.database() as con:
                     con.execute('INSERT OR IGNORE INTO sessions(id,provider,external_id,disabled,updated) VALUES (?,?,?,?,?)',(sid,provider,event['session_id'],1,mem.time.time()))
                     con.execute('UPDATE sessions SET disabled=1 WHERE id=?',(sid,))
-            return {'hookSpecificOutput':{'hookEventName':kind,'additionalContext':'Bu sohbet için Raven otomatik kaydı kapalı. Bu mesajın içeriği kaydedilmedi. Daha önceki kayıtlar silinmedi.'}}
+            return {'hookSpecificOutput':{'hookEventName':kind,'additionalContext':t('Bu sohbet için Raven otomatik kaydı kapalı. Bu mesajın içeriği kaydedilmedi. Daha önceki kayıtlar silinmedi.')}}
         tid=mem.capture_prompt(event,provider)
         if not tid: return {}
         return {'hookSpecificOutput':{'hookEventName':kind,'additionalContext':
-            'Raven oturum kimliği: '+sid+'. Hafıza otomatik kuyruğa alınır; devir yazmak için ek araç çağırma. Kullanıcının salt okunur/kaydetme talimatı her zaman önceliklidir.\n'+mem.context(provider,event['session_id'],prompt)}}
+            t('Raven oturum kimliği: ')+sid+t('. Hafıza otomatik kuyruğa alınır; devir yazmak için ek araç çağırma. Kullanıcının salt okunur/kaydetme talimatı her zaman önceliklidir.\n')+mem.context(provider,event['session_id'],prompt)}}
     if kind=='Stop':
         if provider=='claude':
             if not (mem.DATA/'memory.sqlite3').exists(): return {}
@@ -70,4 +72,4 @@ if __name__=='__main__':
     if hasattr(sys.stdout,'reconfigure'): sys.stdout.reconfigure(encoding='utf-8')
     try: print(json.dumps(handle(json.load(sys.stdin),sys.argv[1] if len(sys.argv)>1 else 'codex'),ensure_ascii=False))
     except Exception:
-        print(json.dumps({'systemMessage':'Raven otomatik kaydı tamamlanamadı; hafıza durumunu kontrol et.'}))
+        print(json.dumps({'systemMessage':t('Raven otomatik kaydı tamamlanamadı; hafıza durumunu kontrol et.')}))

@@ -4,10 +4,33 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+import struct
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'template/00-System/Scripts'))
 import brain
+
+ICON_PATHS = {'template/00-System/Assets/raven-terminal.ico', 'template/00-System/Assets/raven-dashboard.ico'}
+
+def valid_icon(data):
+    """Allow only bounded ICO image entries, with no appended data or gaps."""
+    try:
+        reserved, kind, count = struct.unpack_from('<HHH', data)
+        if reserved or kind != 1 or not 1 <= count <= 32:
+            return False
+        cursor = 6+16*count
+        entries = sorted(struct.unpack_from('<II',data,6+16*i+8) for i in range(count))
+        entries.sort(key=lambda item:item[1])
+        for size, offset in entries:
+            if offset != cursor or size < 40 or offset+size > len(data):
+                return False
+            image = data[offset:offset+size]
+            if not (image.startswith(b'\x89PNG\r\n\x1a\n') or image[:4] == b'\x28\x00\x00\x00'):
+                return False
+            cursor += size
+        return cursor == len(data)
+    except (struct.error, ValueError):
+        return False
 
 def inspect(path, content):
     issues=[]
@@ -32,6 +55,9 @@ def main():
     for relative in files:
         p=ROOT/relative
         if p.is_symlink():failed.append((relative,'symlink'));continue
+        if relative in ICON_PATHS:
+            if not valid_icon(p.read_bytes()):failed.append((relative,'invalid ICO image'))
+            continue
         try:body=p.read_text(encoding='utf-8')
         except (OSError,UnicodeError):failed.append((relative,'unreadable/non-text file'));continue
         failed.extend((relative,error) for error in inspect(relative,body))

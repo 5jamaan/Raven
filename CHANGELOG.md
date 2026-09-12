@@ -1,5 +1,14 @@
 # Changelog
 
+## English / Turkish presentation and desktop assets
+
+- English README with a Turkish companion document.
+- Independent interface, conversation, and future-summary language preferences.
+- Localized Dashboard, starter templates, Base labels, and generated memory presentation.
+- Conservative language switching with edit detection, backups, and rollback; personal content and identifiers are preserved.
+- User-supplied terminal and Dashboard icons, plus optional Windows shortcut creation without overwriting existing shortcuts.
+- Existing personal vaults are not automatically migrated.
+
 ## 0.2.0 — initial public distribution
 
 - Shared event capture for local Codex and Claude Code workspaces.

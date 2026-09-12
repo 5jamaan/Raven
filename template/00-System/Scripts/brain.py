@@ -1,4 +1,5 @@
 """RavenOS local, dependency-free memory engine. No network calls in this module."""
+from i18n import t
 from pathlib import Path
 import argparse, contextlib, datetime as dt, hashlib, json, os, re, shutil, sqlite3, subprocess, sys, uuid, zipfile
 
@@ -200,10 +201,10 @@ def findings():
         if date<today(): found.append({'note':'85-Companion/Threads.md','reason':'Açık thread gözden geçirme tarihi geçti','priority':2})
     return sorted(found,key=lambda x:x['priority'])
 def review(kind):
-    hits=findings(); text='# '+('Günlük' if kind=='daily' else 'Haftalık')+' değerlendirme\n\n'
-    text+='\n'.join('- [['+h['note'].removesuffix('.md')+']] — '+h['reason'] for h in hits) or 'Tarihli kayıtlarda otomatik uyarı yok. Bu, bütün işlerin tamamlandığı anlamına gelmez.'
-    text+='\n\n## Değerlendirilecek\n- Bu oturumlarda verilmiş ancak notlara aktarılmamış söz var mı?\n- Tek sonraki adım ne?\n'
-    if kind=='weekly': text+='- Kaynaklardan kalıcı bilgiye derlenecek doğrulanmış bir örüntü var mı?\n- Profesyonel gelişim ve entelektüel merak ayrı ayrı değerlendirildi mi?\n- Privacy Review adayları ve Mem0 tekrarları kontrol edildi mi?\n- Kanıtlı iki not arasında gerçek bir bağlantı var mı?\n'
+    hits=findings(); text='# '+(t('Günlük') if kind=='daily' else t('Haftalık'))+t(' değerlendirme\n\n')
+    text+='\n'.join('- [['+h['note'].removesuffix('.md')+']] — '+h['reason'] for h in hits) or t('Tarihli kayıtlarda otomatik uyarı yok. Bu, bütün işlerin tamamlandığı anlamına gelmez.')
+    text+=t('\n\n## Değerlendirilecek\n- Bu oturumlarda verilmiş ancak notlara aktarılmamış söz var mı?\n- Tek sonraki adım ne?\n')
+    if kind=='weekly': text+=t('- Kaynaklardan kalıcı bilgiye derlenecek doğrulanmış bir örüntü var mı?\n- Profesyonel gelişim ve entelektüel merak ayrı ayrı değerlendirildi mi?\n- Privacy Review adayları ve Mem0 tekrarları kontrol edildi mi?\n- Kanıtlı iki not arasında gerçek bir bağlantı var mı?\n')
     folder='Daily' if kind=='daily' else 'Weekly'; p=f'80-Reviews/{folder}/{today()}-{uuid.uuid4().hex[:6]}.md'
     write_new(p,serialize(metadata('review'), '\n'+text+'\n\n[[80-Reviews/MOC]]\n'))
     with db() as con: con.execute('INSERT OR REPLACE INTO runs VALUES (?,?)',(kind,now()))
@@ -216,7 +217,7 @@ def capture(input_path,kind,folder=None):
     private=defaults.get('privacy')!='shareable' or is_sensitive(content)
     props=metadata(kind,'private' if private else 'shareable',privacy_review=private)
     if kind=='task': props.update(task_id=str(uuid.uuid4()),todoist_id='',status='open',todoist_sync=False,due='',export_text='')
-    body='\n# '+('Görev' if kind=='task' else 'Yakalama')+'\n\n'+content+'\n\n[[01-Inbox/MOC]]\n'
+    body='\n# '+(t('Görev') if kind=='task' else t('Yakalama'))+'\n\n'+content+'\n\n[[01-Inbox/MOC]]\n'
     write_new(p,serialize(props,body)); audit('capture',record=props['id'],status='ok')
     return str(p)
 def session_close(data,approve=False):

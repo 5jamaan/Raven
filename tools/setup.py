@@ -29,7 +29,9 @@ def command(parts):
         return subprocess.list2cmdline(parts)
     return shlex.join(parts)
 
-def install(vault, user='User', runner='codex', model='', enable=False, codex='', claude=''):
+def install(vault, user='User', runner='codex', model='', enable=False, codex='', claude='', language='en', conversation_language='auto', summary_language=None):
+    if language not in ('en','tr') or conversation_language not in ('auto','en','tr') or summary_language not in (None,'en','tr'):
+        raise ValueError('Unsupported language')
     vault = Path(vault).expanduser().resolve()
     if vault.exists():
         raise ValueError('Target already exists. Choose a NEW folder; nothing was overwritten.')
@@ -45,7 +47,8 @@ def install(vault, user='User', runner='codex', model='', enable=False, codex=''
     shutil.copyfile(REPO/'tools/vault.gitignore',vault/'.gitignore')
     config = vault/'00-System/Config'
     settings = json.loads((config/'settings.json').read_text(encoding='utf-8'))
-    settings.update(user=user, python=python)
+    settings.update(user=user, python=python, language=language,
+                    conversation_language=conversation_language, summary_language=summary_language or language)
     (config/'settings.json').write_text(json.dumps(settings, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
     memory = json.loads((config/'memory.json').read_text(encoding='utf-8'))
     memory.update(enabled=enable, cloud_processing=enable, runner=runner, model=model,
@@ -70,7 +73,7 @@ def install(vault, user='User', runner='codex', model='', enable=False, codex=''
         target=path/('hooks.json' if provider=='codex' else 'settings.json')
         target.write_text(json.dumps(content,indent=2)+'\n',encoding='utf-8')
     # Only initialize local generated pages; never run a model or install a task.
-    code="import memory_engine as m;m.publish();m.render_status()"
+    code="import localization as l, brain; l.change(brain.settings()['language'], initialize=True); import memory_engine as m;m.publish();m.render_status()"
     init=subprocess.run([python,'-c',code],cwd=vault/'00-System/Scripts',capture_output=True,text=True)
     if init.returncode:
         raise RuntimeError('Vault copied but status initialization failed. Inspect locally; no existing vault was changed.')
@@ -80,6 +83,9 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--vault',required=True)
     parser.add_argument('--user',default='User')
+    parser.add_argument('--language',choices=['en','tr'],default='en',help='Dashboard and presentation language')
+    parser.add_argument('--conversation-language',choices=['auto','en','tr'],default='auto')
+    parser.add_argument('--summary-language',choices=['en','tr'],help='New summaries only; defaults to the initial UI language')
     parser.add_argument('--runner',choices=['codex','claude'],default='codex')
     parser.add_argument('--model',default='')
     parser.add_argument('--codex',default='')
@@ -87,7 +93,7 @@ def main():
     parser.add_argument('--enable-memory',action='store_true',help='Explicitly allow captured turns to be processed by the selected cloud model, including turns from the other provider.')
     args=parser.parse_args()
     try:
-        vault=install(args.vault,args.user,args.runner,args.model,args.enable_memory,args.codex,args.claude)
+        vault=install(args.vault,args.user,args.runner,args.model,args.enable_memory,args.codex,args.claude,args.language,args.conversation_language,args.summary_language)
     except (ValueError,RuntimeError) as exc:
         parser.exit(1,str(exc)+'\n')
     print('Created: '+str(vault))
