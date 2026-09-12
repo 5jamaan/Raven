@@ -4,7 +4,6 @@
 
 Raven, aynı yerel çalışma klasöründeki sohbetlerin anlamlı sonuçlarını Obsidian notlarına dönüştürür. Bir sağlayıcıda konuşulan karar, diğer sağlayıcının sonraki oturumunda ilgili kaynağıyla bulunabilir. Büyük çalışma dosyaları ayrı proje klasörlerinde kalır.
 
-Bu depo **yazılım ve boş başlangıç şablonudur**. Kişisel not, sohbet geçmişi, API anahtarı, hesap eşlemesi veya canlı kurulumun Git geçmişini içermez.
 
 ## Neler yapar?
 
