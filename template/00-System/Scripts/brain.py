@@ -1,6 +1,7 @@
 """RavenOS local, dependency-free memory engine. No network calls in this module."""
 from i18n import t
 from pathlib import Path
+import vault_io, secret_filter
 import argparse, contextlib, datetime as dt, hashlib, json, os, re, shutil, sqlite3, subprocess, sys, uuid, zipfile
 
 if hasattr(sys.stdout,'reconfigure'): sys.stdout.reconfigure(encoding='utf-8')
@@ -17,9 +18,7 @@ def today(): return dt.date.today().isoformat()
 def digest(value): return hashlib.sha256(value.encode()).hexdigest()
 def settings(): return json.loads((CONFIG/'settings.json').read_text(encoding='utf-8'))
 def safe_path(path):
-    p=(ROOT/path).resolve()
-    if not p.is_relative_to(ROOT): raise ValueError('Vault dışı yol reddedildi')
-    return p
+    return vault_io.safe_path(ROOT, path)
 def write_new(path,text):
     p=safe_path(path); p.parent.mkdir(parents=True,exist_ok=True)
     with p.open('x',encoding='utf-8',newline='\n') as f: f.write(text)
@@ -60,11 +59,12 @@ def lock(name):
 
 SECRET_PATTERNS=[r'\bm0-[A-Za-z0-9_-]{20,}',r'\bsk-[A-Za-z0-9_-]{16,}',r'\b(?:ghp|github_pat)_[A-Za-z0-9_]{16,}',r'\bAKIA[A-Z0-9]{16}\b',r'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----',r'\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}',r'(?i)(?:api[_ -]?key|password|parola|access[_ -]?token|refresh[_ -]?token|authorization|seed phrase|recovery code|kurtarma kodu)\s*[:=]\s*["\x27]?[A-Za-z0-9+/_.-]{8,}',r'\b[0-9a-fA-F]{40,64}\b']
 SENSITIVE_PATTERNS=[r'[\w.+-]+@[\w.-]+\.[a-zA-Z]{2,}',r'(?<!\w)(?:\+\d[\d ()-]{8,}\d)(?!\w)',r'(?i)\b(?:teşhis|diagnosis|sağlık|kimlik numarası|iban|müşteri sırrı|ticari sır|hukuki belge|özel ilişki|ev adresi)\b']
-def has_secret(text): return any(re.search(p,text) for p in SECRET_PATTERNS)
+def has_secret(text): return next(secret_filter.matches(text, SECRET_PATTERNS), None) is not None
 def is_sensitive(text):
     return any(re.search(p,text) for p in SENSITIVE_PATTERNS) or any(str(t).casefold() in text.casefold() for t in settings()['sensitive_terms'] if t)
 
 def parse_note(path):
+    path=safe_path(path)
     raw=path.read_text(encoding='utf-8-sig')
     if not raw.startswith('---\n'): raise ValueError('Properties / YAML eksik')
     chunks=raw.split('\n---\n',1)
@@ -93,13 +93,14 @@ def inherited(path,data):
     for parent in reversed(path.parent.parents):
         if parent==ROOT or parent.is_relative_to(ROOT):
             pp=parent/'_policy.json'
-            if pp.exists(): result.update(json.loads(pp.read_text(encoding='utf-8')))
+            if pp.exists(): result.update(json.loads(safe_path(pp).read_text(encoding='utf-8')))
     pp=path.parent/'_policy.json'
-    if pp.exists(): result.update(json.loads(pp.read_text(encoding='utf-8')))
+    if pp.exists(): result.update(json.loads(safe_path(pp).read_text(encoding='utf-8')))
     result.update(data)
     return result
 def records():
-    for p in ROOT.rglob('*.md'):
+    for p in vault_io.files(ROOT):
+        if p.suffix.lower()!='.md': continue
         r=p.relative_to(ROOT)
         if r.parts[0].startswith('.') or r.name=='AGENTS.md' or r.parts[:2] in [('00-System','Templates'),('00-System','Tests'),('00-System','Logs')]: continue
         yield p
@@ -163,8 +164,8 @@ def export_record(path,service):
     return {'service':service,'record':rid,'hash':digest(text),'payload':payload,'privacy':privacy,'status':data.get('status')}
 def policy_hash():
     conf=settings()
-    overrides={p.relative_to(ROOT).as_posix():digest(p.read_text(encoding='utf-8')) for p in ROOT.rglob('_policy.json')}
-    return digest(json.dumps({'settings':{k:conf[k] for k in ('private_ai_access','sensitive_terms')},'folders':json.loads((CONFIG/'folder-policies.json').read_text(encoding='utf-8')),'overrides':overrides,'filter':digest(Path(__file__).read_text(encoding='utf-8'))},sort_keys=True))
+    overrides={p.relative_to(ROOT).as_posix():digest(p.read_text(encoding='utf-8')) for p in vault_io.files(ROOT) if p.name=='_policy.json'}
+    return digest(json.dumps({'settings':{k:conf[k] for k in ('private_ai_access','sensitive_terms')},'folders':json.loads((CONFIG/'folder-policies.json').read_text(encoding='utf-8')),'overrides':overrides,'filter':digest(Path(__file__).read_text(encoding='utf-8')),'helpers':{name:digest(Path(module.__file__).read_text(encoding='utf-8')) for name,module in (('vault_io',vault_io),('secret_filter',secret_filter))}},sort_keys=True))
 
 def context():
     conf=settings(); parts=[]
@@ -273,7 +274,7 @@ def doctor():
     required=['AGENTS.md','Dashboard.md','START-HERE.md','Brain-Map.canvas']+[f'85-Companion/{n}.md' for n in ['Core','Rules','Threads','Last-Session','Journal','Preferences','User-Profile','Memory-Queue']]
     for name in required:
         if not (ROOT/name).exists(): issue('FAIL','Zorunlu dosya','Devamlılık eksik','Eksik dosyayı onayla geri yükle',name)
-    known={p.relative_to(ROOT).as_posix().removesuffix('.md') for p in ROOT.rglob('*') if p.is_file() and '.git' not in p.parts}
+    known={p.relative_to(ROOT).as_posix().removesuffix('.md') for p in vault_io.files(ROOT)}
     stems={Path(x).stem for x in known}; links=set(); ids=set(); count=0
     for p in records():
         rel=p.relative_to(ROOT).as_posix(); count+=1
@@ -291,7 +292,8 @@ def doctor():
             normalized=target.removesuffix('.md')
             missing=normalized not in known if '/' in target else (normalized not in known and Path(target).stem not in stems)
             if missing: issue('FAIL','Bağlantı','Hedef bulunamadı','Hedefi veya bağlantıyı onayla düzelt',rel)
-    for p in ROOT.rglob('*.canvas'):
+    for p in vault_io.files(ROOT):
+        if p.suffix.lower()!='.canvas': continue
         try:
             canvas=json.loads(p.read_text(encoding='utf-8')); nodeids={n['id'] for n in canvas['nodes']}
             for n in canvas['nodes']:
@@ -337,24 +339,27 @@ def doctor():
 def backup():
     dest=runtime_dir()/'Backups'; dest.mkdir(parents=True,exist_ok=True)
     target=dest/('RavenOS-'+dt.datetime.now().strftime('%Y%m%d-%H%M%S')+'-'+uuid.uuid4().hex[:6]+'.zip')
-    with zipfile.ZipFile(target,'x',zipfile.ZIP_DEFLATED) as archive:
-        for p in ROOT.rglob('*'):
-            if p.is_file() and not any(x in p.parts for x in ('.git','__pycache__')) and p.suffix not in ('.tmp','.lock'):
+    partial=target.with_suffix('.partial'); snapshot=dest/(uuid.uuid4().hex+'.sqlite3')
+    try:
+        with zipfile.ZipFile(partial,'x',zipfile.ZIP_DEFLATED) as archive:
+            for p in vault_io.files(ROOT):
+                if p.suffix in ('.tmp','.lock','.partial'): continue
                 if p.name.startswith('.env') or 'credential' in p.name.lower(): continue
-                if p.suffix in ('.md','.json','.canvas','.base') and has_secret(p.read_text(encoding='utf-8-sig',errors='replace')):
-                    # Machine hashes are expected only in configuration and state; note secret scan is stricter elsewhere.
-                    if p.suffix=='.md': raise ValueError('Yedek öncesi sır taraması engelledi')
                 if p.name.startswith('state.sqlite3'): continue
-                archive.write(p,p.relative_to(ROOT))
-    # Consistent SQLite backup is added from a separate read snapshot.
-    if (STATE/'state.sqlite3').exists():
-        tmp=dest/(uuid.uuid4().hex+'.sqlite3')
-        with contextlib.closing(sqlite3.connect(STATE/'state.sqlite3')) as src, contextlib.closing(sqlite3.connect(tmp)) as out:
-            src.backup(out); out.commit()
-        with zipfile.ZipFile(target,'a',zipfile.ZIP_DEFLATED) as archive: archive.write(tmp,'00-System/State/state.sqlite3')
-        tmp.unlink()
-    with zipfile.ZipFile(target) as archive:
-        if archive.testzip(): raise ValueError('Yedek doğrulanamadı')
+                if p.suffix.lower()=='.md' and has_secret(p.read_text(encoding='utf-8-sig',errors='replace')):
+                    raise ValueError('Yedek öncesi sır taraması engelledi')
+                archive.write(safe_path(p),p.relative_to(ROOT))
+            source=STATE/'state.sqlite3'
+            if source.exists():
+                safe_path(source)
+                with contextlib.closing(sqlite3.connect(source.as_uri()+'?mode=ro',uri=True)) as src, contextlib.closing(sqlite3.connect(snapshot)) as out:
+                    src.backup(out); out.commit()
+                archive.write(snapshot,'00-System/State/state.sqlite3')
+        with zipfile.ZipFile(partial) as archive:
+            if archive.testzip(): raise ValueError('Yedek doğrulanamadı')
+        os.replace(partial,target)
+    finally:
+        partial.unlink(missing_ok=True); snapshot.unlink(missing_ok=True)
     audit('backup',status='ok'); return str(target)
 def maintenance():
     with lock('maintenance'):

@@ -27,9 +27,7 @@ def key(provider, session):
 def clean(text):
     if not isinstance(text, str): return ''
     text = text.replace('\x00', '')
-    for pattern in brain.SECRET_PATTERNS:
-        text = re.sub(pattern, '[SIR GİZLENDİ]', text)
-    return text
+    return brain.secret_filter.redact(text, brain.SECRET_PATTERNS)
 
 def excluded_prompt(prompt):
     return bool(READ_ONLY.search(prompt) or NO_CAPTURE.search(prompt))
