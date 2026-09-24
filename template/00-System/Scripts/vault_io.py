@@ -18,14 +18,18 @@ def is_link(path):
 
 
 def safe_path(root, path):
-    root = Path(root).resolve()
+    root = Path(os.path.abspath(root))
+    canonical_root = root.resolve()
     raw = Path(path)
     # Inspect lexical ancestors BEFORE resolution, including internal links.
     candidate = Path(os.path.abspath(root / raw))
     try:
         parts = candidate.relative_to(root).parts
     except ValueError:
-        raise ValueError('Vault dışı yol reddedildi') from None
+        # Windows can supply either a long path or its 8.3 spelling. Keep the
+        # caller's root spelling so relative_to(ROOT) remains well-defined.
+        try: parts = candidate.relative_to(canonical_root).parts
+        except ValueError: raise ValueError('Vault dışı yol reddedildi') from None
     cursor = root
     for part in parts:
         if part.casefold() in EXCLUDED:
@@ -36,14 +40,14 @@ def safe_path(root, path):
                 raise ValueError('Bağlantılı dosya veya klasör reddedildi')
         except FileNotFoundError:
             pass
-    if not candidate.resolve().is_relative_to(root):
+    if not cursor.resolve().is_relative_to(canonical_root):
         raise ValueError('Vault dışı yol reddedildi')
-    return candidate
+    return root.joinpath(*parts)
 
 
 def files(root):
     """Prune before descending; propagate access/IO failures rather than hide them."""
-    root = Path(root).resolve()
+    root = Path(os.path.abspath(root))
     def walk(folder):
         with os.scandir(folder) as entries:
             items = sorted(entries, key=lambda e: e.name.casefold())
